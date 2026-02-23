@@ -25,7 +25,7 @@ export function AppShell({ title, rightSlot, backTo, children }: AppShellProps) 
           {backTo ? (
             <button
               type="button"
-              onClick={() => navigate(backTo)}
+              onClick={() => navigate(backTo, { replace: true })}
               className="flex-shrink-0 rounded-full border border-slate-700/70 px-2.5 py-1 text-[11px] text-slate-300"
             >
               ← 返回
