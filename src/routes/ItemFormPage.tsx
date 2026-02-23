@@ -96,7 +96,7 @@ export function ItemFormPage({ mode }: ItemFormPageProps) {
   const [name, setName] = useState(location.state?.initialName ?? '');
   const [spec, setSpec] = useState(location.state?.initialSpec ?? '');
   const [unit, setUnit] = useState('');
-  const [quantity, setQuantity] = useState(0);
+  const [quantity, setQuantity] = useState('');
   const [barcode, setBarcode] = useState(location.state?.barcode ?? '');
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [showScanner, setShowScanner] = useState(false);
@@ -126,7 +126,7 @@ export function ItemFormPage({ mode }: ItemFormPageProps) {
           setName(item.name);
           setSpec(item.spec ?? '');
           setUnit(item.unit ?? '');
-          setQuantity(item.quantity);
+          setQuantity(String(item.quantity));
           setBarcode(item.barcode ?? '');
           setImageUrl(item.image_url);
           setJdSku(item.jd_sku ?? '');
@@ -150,6 +150,7 @@ export function ItemFormPage({ mode }: ItemFormPageProps) {
     }
     setSaving(true);
     setError(null);
+    const quantityNum = quantity === '' ? 0 : Math.max(0, parseInt(quantity, 10) || 0);
     try {
       if (mode === 'create') {
         const created = await createItem({
@@ -157,21 +158,22 @@ export function ItemFormPage({ mode }: ItemFormPageProps) {
           name,
           spec: spec || null,
           unit: unit || null,
-          quantity,
+          quantity: quantityNum,
           barcode: barcode || null,
           image_url: imageUrl,
           jd_sku: jdSku || null,
           tmall_sku: tmallSku || null,
           pdd_sku: pddSku || null
         });
-        navigate(`/items/${created.id}`, { replace: true });
+        // 新增完成后直接回到列表页，方便继续扫码录入
+        navigate('/items', { replace: true });
       } else if (mode === 'edit' && initialItem) {
         const updated = await updateItem(initialItem.id, {
           user_id: user.id,
           name,
           spec: spec || null,
           unit: unit || null,
-          quantity,
+          quantity: quantityNum,
           barcode: barcode || null,
           image_url: imageUrl,
           jd_sku: jdSku || null,
@@ -230,9 +232,15 @@ export function ItemFormPage({ mode }: ItemFormPageProps) {
             <label className="flex-1 text-xs font-medium text-slate-300">
               数量
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 value={quantity}
-                onChange={(e) => setQuantity(Number(e.target.value) || 0)}
+                onChange={(e) => {
+                  const v = e.target.value.replace(/[^0-9]/g, '');
+                  setQuantity(v);
+                }}
+                placeholder="0"
                 className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-sm outline-none ring-2 ring-transparent focus:ring-emerald-500"
               />
             </label>
