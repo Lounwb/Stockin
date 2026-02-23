@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { AuthPage } from './routes/AuthPage';
+import { AuthCallbackPage } from './routes/AuthCallbackPage';
 import { ItemsListPage } from './routes/ItemsListPage';
 import { ItemFormPage } from './routes/ItemFormPage';
 import { ItemDetailPage } from './routes/ItemDetailPage';
@@ -12,6 +13,7 @@ function App() {
       <div className="min-h-screen bg-slate-950 text-slate-50">
         <Routes>
           <Route path="/auth" element={<AuthPage />} />
+          <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
           <Route
             path="/items"

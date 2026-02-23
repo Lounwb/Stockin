@@ -3,13 +3,12 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
 
-type Step = 'inputPhone' | 'verifyOtp';
+type Step = 'inputEmail' | 'checkEmail';
 
 export function AuthPage() {
   const { user } = useAuth();
-  const [step, setStep] = useState<Step>('inputPhone');
-  const [phone, setPhone] = useState('');
-  const [otp, setOtp] = useState('');
+  const [step, setStep] = useState<Step>('inputEmail');
+  const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,36 +28,31 @@ export function AuthPage() {
     setLoading(true);
     try {
       const { error: sendError } = await supabase.auth.signInWithOtp({
-        phone,
+        email,
         options: {
-          channel: 'sms'
+          emailRedirectTo: `${window.location.origin}/auth/callback`
         }
       });
       if (sendError) {
         setError(sendError.message);
       } else {
-        setStep('verifyOtp');
+        setStep('checkEmail');
       }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleVerifyOtp = async (e: FormEvent) => {
-    e.preventDefault();
+  const handleAnonLogin = async () => {
     setError(null);
     setLoading(true);
     try {
-      const { data, error: verifyError } = await supabase.auth.verifyOtp({
-        phone,
-        token: otp,
-        type: 'sms'
-      });
-      if (verifyError) {
-        setError(verifyError.message);
+      const { data, error: anonError } = await supabase.auth.signInAnonymously();
+      if (anonError) {
+        setError(anonError.message);
         return;
       }
-      if (data.session) {
+      if (data.user) {
         const from = location.state?.from?.pathname ?? '/items';
         navigate(from, { replace: true });
       }
@@ -68,64 +62,71 @@ export function AuthPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-950">
-      <header className="px-4 pt-10 pb-6">
-        <h1 className="text-2xl font-semibold tracking-tight">Stockin 库存管理</h1>
-        <p className="mt-2 text-sm text-slate-400">使用手机号登录，随时掌握库存。</p>
-      </header>
+    <div className="flex min-h-screen items-center justify-center px-4 py-6">
+      <div className="w-full max-w-sm rounded-3xl border border-[var(--stockin-border-subtle)] bg-[var(--stockin-bg-soft)]/95 p-5 shadow-[0_18px_60px_rgba(15,23,42,0.85)]">
+        <header className="pb-5">
+          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/40 bg-[var(--stockin-accent-soft)] px-3 py-1 text-[11px] font-medium text-emerald-300">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+            Stockin · 我的库存抽屉
+          </div>
+          <h1 className="mt-4 text-2xl font-semibold tracking-tight">
+            登录或匿名体验
+          </h1>
+          <p className="mt-2 text-xs text-slate-400">
+            使用邮箱登录可在多设备同步，匿名试用仅用于当前设备快速体验。
+          </p>
+        </header>
 
-      <main className="flex-1 px-4">
-        {step === 'inputPhone' && (
-          <form onSubmit={handleSendOtp} className="space-y-4">
-            <label className="block text-sm font-medium text-slate-200">
-              手机号
-              <input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="例如：+86 13800000000"
-                className="mt-2 w-full rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-sm outline-none ring-2 ring-transparent focus:ring-emerald-500"
-                required
-              />
-            </label>
-            {error && <p className="text-sm text-red-400">{error}</p>}
-            <button
-              type="submit"
-              disabled={loading}
-              className="mt-2 w-full rounded-xl bg-emerald-500 px-4 py-2 text-sm font-medium text-slate-950 disabled:opacity-60"
-            >
-              {loading ? '发送中...' : '发送验证码'}
-            </button>
-          </form>
-        )}
+        <main>
+          {step === 'inputEmail' && (
+            <form onSubmit={handleSendOtp} className="space-y-4">
+              <label className="block text-xs font-medium text-slate-200">
+                邮箱地址
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="例如：you@example.com"
+                  className="mt-2 w-full rounded-2xl border border-slate-800/80 bg-slate-900/70 px-3 py-2.5 text-sm outline-none ring-2 ring-transparent placeholder:text-slate-600 focus:border-emerald-500/60 focus:ring-emerald-500/40"
+                  required
+                />
+              </label>
+              {error && <p className="text-xs text-red-400">{error}</p>}
+              <button
+                type="submit"
+                disabled={loading}
+                className="mt-1 w-full rounded-2xl bg-emerald-500 px-4 py-2.5 text-sm font-medium text-slate-950 shadow-[0_14px_30px_rgba(16,185,129,0.35)] disabled:opacity-60"
+              >
+                {loading ? '发送中...' : '发送登录链接'}
+              </button>
 
-        {step === 'verifyOtp' && (
-          <form onSubmit={handleVerifyOtp} className="space-y-4">
-            <p className="text-sm text-slate-300">
-              验证码已发送至 <span className="font-mono">{phone}</span>
-            </p>
-            <label className="block text-sm font-medium text-slate-200">
-              验证码
-              <input
-                type="text"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-                placeholder="6 位数字"
-                className="mt-2 w-full rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-sm outline-none ring-2 ring-transparent focus:ring-emerald-500"
-                required
-              />
-            </label>
-            {error && <p className="text-sm text-red-400">{error}</p>}
-            <button
-              type="submit"
-              disabled={loading}
-              className="mt-2 w-full rounded-xl bg-emerald-500 px-4 py-2 text-sm font-medium text-slate-950 disabled:opacity-60"
-            >
-              {loading ? '登录中...' : '验证并登录'}
-            </button>
-          </form>
-        )}
-      </main>
+              <div className="mt-5 space-y-2 rounded-2xl border border-slate-800/80 bg-slate-900/50 p-3">
+                <p className="text-[11px] text-slate-400">或者先匿名体验：</p>
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={handleAnonLogin}
+                  className="w-full rounded-xl border border-slate-700/80 px-4 py-2 text-xs font-medium text-slate-100 disabled:opacity-60"
+                >
+                  匿名试用（无需注册）
+                </button>
+              </div>
+            </form>
+          )}
+
+          {step === 'checkEmail' && (
+            <div className="space-y-3 text-sm">
+              <p className="text-slate-200">
+                登录链接已发送至 <span className="font-mono">{email}</span>。
+              </p>
+              <p className="text-xs text-slate-400">
+                请在 5 分钟内打开邮箱，点击邮件中的链接完成登录。完成后本页会自动识别你的登录状态。
+              </p>
+              {error && <p className="text-xs text-red-400">{error}</p>}
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   );
 }

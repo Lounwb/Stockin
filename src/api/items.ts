@@ -17,6 +17,7 @@ export type Item = {
 };
 
 export type ItemInput = {
+  user_id: string;
   name: string;
   spec?: string | null;
   barcode?: string | null;

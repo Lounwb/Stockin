@@ -2,22 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
-html,
-body,
-#root {
-  height: 100%;
+@layer base {
+  :root {
+    --stockin-bg: #020617;
+    --stockin-bg-soft: #030712;
+    --stockin-accent: #22c55e;
+    --stockin-accent-soft: rgba(34, 197, 94, 0.14);
+    --stockin-border-subtle: rgba(148, 163, 184, 0.25);
+    --stockin-text-primary: #e5e7eb;
+    --stockin-text-muted: #64748b;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply text-slate-50;
+    background:
+      radial-gradient(circle at top left, #1e293b 0, transparent 55%),
+      radial-gradient(circle at bottom right, #0f766e 0, transparent 55%),
+      var(--stockin-bg);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Text',
+      'Helvetica Neue', sans-serif;
+  }
+
+  button {
+    @apply active:scale-[0.98] transition-transform;
+  }
+
+  input,
+  button {
+    -webkit-tap-highlight-color: transparent;
+  }
 }
 
-body {
-  @apply bg-slate-950 text-slate-50;
-}
-
-button {
-  @apply active:scale-[0.98] transition-transform;
-}
-
-input,
-button {
-  -webkit-tap-highlight-color: transparent;
-}
 

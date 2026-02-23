@@ -1,12 +1,16 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { AppShell } from '../components/AppShell';
 import { listItems, type Item, changeQuantity, deleteItem } from '../api/items';
+import { BarcodeScanner } from '../components/BarcodeScanner';
+import { lookupBarcode } from '../api/barcode';
 
 export function ItemsListPage() {
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showScanner, setShowScanner] = useState(false);
+  const [scanError, setScanError] = useState<string | null>(null);
 
   const navigate = useNavigate();
 
@@ -49,14 +53,38 @@ export function ItemsListPage() {
     }
   };
 
+  const handleScanDetected = async (code: string) => {
+    setShowScanner(false);
+    setScanError(null);
+    try {
+      const product = await lookupBarcode(code);
+      navigate('/items/new', {
+        state: {
+          fromScan: true,
+          barcode: code,
+          initialName: product?.name ?? '',
+          initialSpec: product?.standard ?? ''
+        }
+      });
+    } catch (e) {
+      setScanError((e as Error).message);
+      navigate('/items/new', {
+        state: {
+          fromScan: true,
+          barcode: code
+        }
+      });
+    }
+  };
+
   return (
     <AppShell
-      title="库存列表"
+      title="库存概览"
       rightSlot={
         <button
           type="button"
           onClick={() => navigate('/items/new')}
-          className="rounded-full bg-emerald-500 px-3 py-1 text-xs font-medium text-slate-950"
+          className="rounded-full bg-emerald-500 px-3 py-1.5 text-xs font-medium text-slate-950 shadow-[0_8px_20px_rgba(16,185,129,0.45)]"
         >
           新增
         </button>
@@ -65,13 +93,35 @@ export function ItemsListPage() {
       {loading && <p className="text-sm text-slate-400">加载中...</p>}
       {error && <p className="text-sm text-red-400">{error}</p>}
 
+      {!loading && (
+        <section className="mb-4 rounded-2xl border border-slate-800/70 bg-slate-950/60 px-3 py-2.5 text-xs text-slate-400">
+          <div className="flex items-center justify-between">
+            <span>物品数量</span>
+            <span className="font-mono text-emerald-400">
+              {items.length.toString().padStart(2, '0')}
+            </span>
+          </div>
+        </section>
+      )}
+
       {!loading && items.length === 0 && (
-        <p className="mt-10 text-center text-sm text-slate-500">
-          还没有记录，点击右上角「新增」开始录入物品。
+        <p className="mt-4 text-center text-sm text-slate-500">
+          还没有记录，点击下方「扫码录入」或右上角「新增」开始录入物品。
         </p>
       )}
 
-      <ul className="space-y-3 pb-4">
+      <div className="mb-4">
+        {scanError && <p className="mb-2 text-xs text-red-400">{scanError}</p>}
+        <button
+          type="button"
+          onClick={() => setShowScanner(true)}
+          className="w-full rounded-2xl bg-gradient-to-r from-emerald-500 via-emerald-400 to-teal-500 px-4 py-3 text-sm font-medium text-slate-950 shadow-[0_18px_40px_rgba(16,185,129,0.55)]"
+        >
+          📷 扫码录入物品
+        </button>
+      </div>
+
+      <ul className="space-y-3 pb-12">
         {items.map((item) => (
           <li
             key={item.id}
@@ -137,6 +187,15 @@ export function ItemsListPage() {
           </li>
         ))}
       </ul>
+
+      {showScanner && (
+        <BarcodeScanner
+          onDetected={(value) => {
+            void handleScanDetected(value);
+          }}
+          onClose={() => setShowScanner(false)}
+        />
+      )}
     </AppShell>
   );
 }

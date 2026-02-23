@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from '../components/AppShell';
 import { createItem, getItem, updateItem, type Item } from '../api/items';
 import { useAuth } from '../contexts/AuthContext';
@@ -76,6 +76,16 @@ type ItemFormPageProps = {
 export function ItemFormPage({ mode }: ItemFormPageProps) {
   const { user } = useAuth();
   const { id } = useParams<{ id: string }>();
+  const location = useLocation() as {
+    state?:
+      | {
+          fromScan?: boolean;
+          barcode?: string;
+          initialName?: string;
+          initialSpec?: string;
+        }
+      | undefined;
+  };
   const navigate = useNavigate();
 
   const [initialItem, setInitialItem] = useState<Item | null>(null);
@@ -83,11 +93,11 @@ export function ItemFormPage({ mode }: ItemFormPageProps) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [name, setName] = useState('');
-  const [spec, setSpec] = useState('');
+  const [name, setName] = useState(location.state?.initialName ?? '');
+  const [spec, setSpec] = useState(location.state?.initialSpec ?? '');
   const [unit, setUnit] = useState('');
   const [quantity, setQuantity] = useState(0);
-  const [barcode, setBarcode] = useState('');
+  const [barcode, setBarcode] = useState(location.state?.barcode ?? '');
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [showScanner, setShowScanner] = useState(false);
   const [jdSku, setJdSku] = useState('');
@@ -128,12 +138,16 @@ export function ItemFormPage({ mode }: ItemFormPageProps) {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user) {
+      setError('当前未登录，无法保存物品，请先通过邮箱登录。');
+      return;
+    }
     setSaving(true);
     setError(null);
     try {
       if (mode === 'create') {
         const created = await createItem({
+          user_id: user.id,
           name,
           spec: spec || null,
           unit: unit || null,
@@ -147,6 +161,7 @@ export function ItemFormPage({ mode }: ItemFormPageProps) {
         navigate(`/items/${created.id}`, { replace: true });
       } else if (mode === 'edit' && initialItem) {
         const updated = await updateItem(initialItem.id, {
+          user_id: user.id,
           name,
           spec: spec || null,
           unit: unit || null,
@@ -169,7 +184,7 @@ export function ItemFormPage({ mode }: ItemFormPageProps) {
   const title = mode === 'create' ? '新增物品' : '编辑物品';
 
   return (
-    <AppShell title={title}>
+    <AppShell title={title} backTo="/items">
       {loading ? (
         <p className="text-sm text-slate-400">加载中...</p>
       ) : (

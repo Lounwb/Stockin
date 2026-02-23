@@ -22,13 +22,33 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const ensureProfile = async (u: User) => {
+    try {
+      await supabase.from('profiles').upsert(
+        {
+          id: u.id
+        },
+        {
+          onConflict: 'id'
+        }
+      );
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.warn('ensureProfile failed', e);
+    }
+  };
+
   useEffect(() => {
     const init = async () => {
       const {
         data: { session: initialSession }
       } = await supabase.auth.getSession();
       setSession(initialSession);
-      setUser(initialSession?.user ?? null);
+      const initialUser = initialSession?.user ?? null;
+      setUser(initialUser);
+      if (initialUser) {
+        void ensureProfile(initialUser);
+      }
       setLoading(false);
     };
 
@@ -38,7 +58,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
       data: { subscription }
     } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
-      setUser(newSession?.user ?? null);
+      const nextUser = newSession?.user ?? null;
+      setUser(nextUser);
+      if (nextUser) {
+        void ensureProfile(nextUser);
+      }
     });
 
     return () => {

@@ -64,7 +64,7 @@ export function ItemDetailPage() {
   };
 
   return (
-    <AppShell title="物品详情">
+    <AppShell title="物品详情" backTo="/items">
       {loading && <p className="text-sm text-slate-400">加载中...</p>}
       {error && <p className="text-sm text-red-400">{error}</p>}
       {!loading && item && (
@@ -95,18 +95,25 @@ export function ItemDetailPage() {
             )}
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={() => navigate('/items/new')}
+              className="rounded-xl bg-emerald-500 px-3 py-2 text-sm font-medium text-slate-950"
+            >
+              继续添加
+            </button>
             <button
               type="button"
               onClick={() => navigate(`/items/${item.id}/edit`)}
-              className="flex-1 rounded-xl bg-slate-800 px-3 py-2 text-sm font-medium text-slate-100"
+              className="rounded-xl bg-slate-800 px-3 py-2 text-sm font-medium text-slate-100"
             >
               编辑
             </button>
             <button
               type="button"
               onClick={handleDelete}
-              className="flex-1 rounded-xl bg-red-500/90 px-3 py-2 text-sm font-medium text-slate-50"
+              className="rounded-xl bg-red-500/90 px-3 py-2 text-sm font-medium text-slate-50"
             >
               删除
             </button>
