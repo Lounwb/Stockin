@@ -59,6 +59,7 @@ export function ItemsListPage() {
     try {
       const product = await lookupBarcode(code);
       navigate('/items/new', {
+        replace: true,
         state: {
           fromScan: true,
           barcode: code,
@@ -69,6 +70,7 @@ export function ItemsListPage() {
     } catch (e) {
       setScanError((e as Error).message);
       navigate('/items/new', {
+        replace: true,
         state: {
           fromScan: true,
           barcode: code
@@ -83,7 +85,7 @@ export function ItemsListPage() {
       rightSlot={
         <button
           type="button"
-          onClick={() => navigate('/items/new')}
+          onClick={() => navigate('/items/new', { replace: true })}
           className="rounded-full bg-emerald-500 px-3 py-1.5 text-xs font-medium text-slate-950 shadow-[0_8px_20px_rgba(16,185,129,0.45)]"
         >
           新增
