@@ -25,14 +25,7 @@ export function AppShell({ title, rightSlot, backTo, children }: AppShellProps) 
           {backTo ? (
             <button
               type="button"
-              onClick={() => {
-                // 从新增页返回列表时用完整跳转，避免 iOS Safari 历史栈/bfcache 导致再次回到新增页
-                if (location.pathname === '/items/new' && backTo === '/items') {
-                  window.location.replace(backTo);
-                  return;
-                }
-                navigate(backTo, { replace: true });
-              }}
+              onClick={() => navigate(backTo, { replace: true })}
               className="flex-shrink-0 rounded-full border border-slate-700/70 px-2.5 py-1 text-[11px] text-slate-300"
             >
               ← 返回

@@ -83,6 +83,8 @@ export function ItemFormPage({ mode }: ItemFormPageProps) {
           barcode?: string;
           initialName?: string;
           initialSpec?: string;
+          fromAction?: 'manualAdd' | 'continueAdd';
+          baseItemId?: string;
         }
       | undefined;
   };
@@ -114,6 +116,15 @@ export function ItemFormPage({ mode }: ItemFormPageProps) {
     fromScan &&
     !location.state?.initialName &&
     !location.state?.initialSpec;
+
+  // 防御性：如果是“新增物品”页，但没有任何 state（既不是扫码、也不是列表/详情主动跳转），
+  // 多半是 iOS Safari 历史/缓存误回到该页，直接重定向回列表，避免卡在空白新增页
+  useEffect(() => {
+    if (mode !== 'create') return;
+    if (!location.state) {
+      navigate('/items', { replace: true });
+    }
+  }, [mode, location.state, navigate]);
 
   useEffect(() => {
     if (mode === 'edit' && id) {
@@ -165,8 +176,8 @@ export function ItemFormPage({ mode }: ItemFormPageProps) {
           tmall_sku: tmallSku || null,
           pdd_sku: pddSku || null
         });
-        // 新增完成后用完整跳转到列表，避免 iOS Safari 历史栈/bfcache 导致再次回到新增页
-        window.location.replace('/items');
+        // 新增完成后回到列表，方便继续扫码录入
+        navigate('/items', { replace: true });
       } else if (mode === 'edit' && initialItem) {
         const updated = await updateItem(initialItem.id, {
           user_id: user.id,

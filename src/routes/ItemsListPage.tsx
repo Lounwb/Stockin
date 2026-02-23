@@ -85,7 +85,12 @@ export function ItemsListPage() {
       rightSlot={
         <button
           type="button"
-          onClick={() => navigate('/items/new', { replace: true })}
+          onClick={() =>
+            navigate('/items/new', {
+              replace: true,
+              state: { fromAction: 'manualAdd' }
+            })
+          }
           className="rounded-full bg-emerald-500 px-3 py-1.5 text-xs font-medium text-slate-950 shadow-[0_8px_20px_rgba(16,185,129,0.45)]"
         >
           新增
