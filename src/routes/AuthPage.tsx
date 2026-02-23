@@ -70,48 +70,52 @@ export function AuthPage() {
             Stockin · 我的库存抽屉
           </div>
           <h1 className="mt-4 text-2xl font-semibold tracking-tight">
-            登录或匿名体验
+            进入库存
           </h1>
           <p className="mt-2 text-xs text-slate-400">
-            使用邮箱登录可在多设备同步，匿名试用仅用于当前设备快速体验。
+            匿名即可使用，无需注册；邮箱登录可多设备同步。
           </p>
         </header>
 
         <main>
           {step === 'inputEmail' && (
-            <form onSubmit={handleSendOtp} className="space-y-4">
-              <label className="block text-xs font-medium text-slate-200">
-                邮箱地址
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="例如：you@example.com"
-                  className="mt-2 w-full rounded-2xl border border-slate-800/80 bg-slate-900/70 px-3 py-2.5 text-sm outline-none ring-2 ring-transparent placeholder:text-slate-600 focus:border-emerald-500/60 focus:ring-emerald-500/40"
-                  required
-                />
-              </label>
-              {error && <p className="text-xs text-red-400">{error}</p>}
-              <button
-                type="submit"
-                disabled={loading}
-                className="mt-1 w-full rounded-2xl bg-emerald-500 px-4 py-2.5 text-sm font-medium text-slate-950 shadow-[0_14px_30px_rgba(16,185,129,0.35)] disabled:opacity-60"
-              >
-                {loading ? '发送中...' : '发送登录链接'}
-              </button>
-
-              <div className="mt-5 space-y-2 rounded-2xl border border-slate-800/80 bg-slate-900/50 p-3">
-                <p className="text-[11px] text-slate-400">或者先匿名体验：</p>
+            <>
+              <div className="space-y-3">
                 <button
                   type="button"
                   disabled={loading}
                   onClick={handleAnonLogin}
-                  className="w-full rounded-xl border border-slate-700/80 px-4 py-2 text-xs font-medium text-slate-100 disabled:opacity-60"
+                  className="w-full rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-medium text-slate-950 shadow-[0_14px_30px_rgba(16,185,129,0.35)] disabled:opacity-60"
                 >
-                  匿名试用（无需注册）
+                  {loading ? '进入中...' : '匿名进入（推荐先体验）'}
                 </button>
+                <p className="text-center text-[11px] text-slate-500">
+                  或使用邮箱登录，多设备同步
+                </p>
               </div>
-            </form>
+
+              <form onSubmit={handleSendOtp} className="mt-5 space-y-4 rounded-2xl border border-slate-800/80 bg-slate-900/50 p-4">
+                <label className="block text-xs font-medium text-slate-200">
+                  邮箱地址
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="例如：you@example.com"
+                    className="mt-2 w-full rounded-xl border border-slate-800/80 bg-slate-900/70 px-3 py-2.5 text-sm outline-none ring-2 ring-transparent placeholder:text-slate-600 focus:border-emerald-500/60 focus:ring-emerald-500/40"
+                    required
+                  />
+                </label>
+                {error && <p className="text-xs text-red-400">{error}</p>}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full rounded-xl bg-slate-700 px-4 py-2.5 text-sm font-medium text-slate-100 disabled:opacity-60"
+                >
+                  {loading ? '发送中...' : '发送登录链接'}
+                </button>
+              </form>
+            </>
           )}
 
           {step === 'checkEmail' && (

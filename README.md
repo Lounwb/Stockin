@@ -8,7 +8,7 @@
 - **扫码录入**：通过手机摄像头扫描条形码自动填入
 - **图片上传**：拍照或从相册选择物品图片上传到云端
 - **价格追踪**：为物品绑定京东 / 天猫 / 拼多多商品，每天自动抓取价格，展示价格曲线与最高/最低/近一年均价
-- **用户体系**：使用手机号 + 短信验证码登录，无需密码
+- **用户体系**：支持匿名进入（无需注册）或邮箱登录链接，多设备同步
 
 前端针对手机设备做了移动优先设计，适合放在桌面快捷方式当作“小程序”使用。
 
@@ -17,7 +17,7 @@
 - **前端**：React 18 + TypeScript + Vite + React Router
 - **UI**：Tailwind CSS + Recharts（价格曲线）
 - **后端（BaaS）**：Supabase
-  - Auth（手机号 OTP 登录）
+  - Auth（邮箱魔法链接 + 匿名登录）
   - Postgres（`profiles / items / item_price_history / item_transactions`）
   - Storage（`item-images` 存储物品图片）
   - Edge Functions（`search_product / fetch_prices / get_price_stats`）
@@ -109,21 +109,32 @@ npm run dev
 
 > 注意：前端只需要匿名 Key，其余 Service Key 只在 Supabase Edge Functions 中使用。
 
-### 3. 设置路由与域名
+### 3. 线上开放匿名使用
+
+若希望线上用户无需注册即可使用，请在 **Supabase 控制台** 中：
+
+1. 打开 **Authentication → Providers**
+2. 找到 **Anonymous sign-ins（匿名登录）** 并 **启用**
+3. 保存后，访问部署好的站点，点击「匿名进入（推荐先体验）」即可直接进入库存，无需邮箱
+
+匿名用户数据仍按 `auth.uid()` 隔离，仅当前设备可见；后续可用邮箱登录以多设备同步。
+
+### 4. 设置路由与域名
 
 - 使用 Vite 默认静态导出，Vercel 会自动识别为前端 SPA
 - 可以绑定自定义域名（可选），手机上添加到主屏幕便于访问
 
-### 4. 验证线上功能
+### 5. 验证线上功能
 
 部署完成后，依次验证：
 
-1. 手机号登录：是否能正常收到短信并登录
-2. 物品新增 / 编辑 / 删除 / 数量增减
-3. 图片上传：拍照/相册是否能成功上传并显示
-4. 条形码扫码：手机浏览器是否允许摄像头权限，扫码后条码是否自动填入
-5. 商品自动匹配：是否能拉回京东/天猫/拼多多的候选列表并保存 SKU
-6. 价格曲线：在 `fetch_prices` 定时任务运行后，是否能看到历史价格和统计信息
+1. **匿名进入**：点击「匿名进入」应直接进入库存列表（需在 Supabase 开启 Anonymous sign-ins）
+2. 邮箱登录：发送登录链接后，在电脑或手机浏览器点击邮件链接完成登录
+3. 物品新增 / 编辑 / 删除 / 数量增减
+4. 图片上传：拍照/相册是否能成功上传并显示
+5. 条形码扫码：手机浏览器是否允许摄像头权限，扫码后条码是否自动填入
+6. 商品自动匹配：是否能拉回京东/天猫/拼多多的候选列表并保存 SKU
+7. 价格曲线：在 `fetch_prices` 定时任务运行后，是否能看到历史价格和统计信息
 
 ---
 
@@ -132,7 +143,7 @@ npm run dev
 - `src/main.tsx`：应用入口，挂载 React 与路由
 - `src/App.tsx`：顶层路由结构 + 鉴权保护
 - `src/contexts/AuthContext.tsx`：Supabase Auth 封装（手机号登录会话）
-- `src/routes/AuthPage.tsx`：手机号 + 验证码登录页面
+- `src/routes/AuthPage.tsx`：登录页（匿名进入 / 邮箱登录链接）
 - `src/routes/ItemsListPage.tsx`：库存列表页
 - `src/routes/ItemFormPage.tsx`：新建/编辑物品页面（含扫码、图片上传、电商匹配）
 - `src/routes/ItemDetailPage.tsx`：物品详情 + 价格曲线
