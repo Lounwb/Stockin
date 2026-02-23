@@ -115,6 +115,16 @@ export function ItemFormPage({ mode }: ItemFormPageProps) {
     !location.state?.initialName &&
     !location.state?.initialSpec;
 
+  // iOS Safari 可能从 bfcache 恢复此页，导致“先到列表再回到新增页”；一旦是恢复出来的立刻离开
+  useEffect(() => {
+    if (mode !== 'create') return;
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) navigate('/items', { replace: true });
+    };
+    window.addEventListener('pageshow', onPageShow);
+    return () => window.removeEventListener('pageshow', onPageShow);
+  }, [mode, navigate]);
+
   useEffect(() => {
     if (mode === 'edit' && id) {
       const load = async () => {
@@ -165,8 +175,8 @@ export function ItemFormPage({ mode }: ItemFormPageProps) {
           tmall_sku: tmallSku || null,
           pdd_sku: pddSku || null
         });
-        // 新增完成后跳到根目录（由路由重定向到列表）
-        navigate('/', { replace: true });
+        // 新增完成后直接回到显示所有物品的页面
+        navigate('/items', { replace: true });
       } else if (mode === 'edit' && initialItem) {
         const updated = await updateItem(initialItem.id, {
           user_id: user.id,
@@ -192,7 +202,7 @@ export function ItemFormPage({ mode }: ItemFormPageProps) {
   const title = mode === 'create' ? '新增物品' : '编辑物品';
 
   return (
-    <AppShell title={title} backTo="/">
+    <AppShell title={title} backTo="/items">
       {loading ? (
         <p className="text-sm text-slate-400">加载中...</p>
       ) : (
