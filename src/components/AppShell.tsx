@@ -25,7 +25,14 @@ export function AppShell({ title, rightSlot, backTo, children }: AppShellProps) 
           {backTo ? (
             <button
               type="button"
-              onClick={() => navigate(backTo, { replace: true })}
+              onClick={() => {
+                if (location.pathname === '/items/new') {
+                  // 从新增页返回时，直接整页跳回根目录，彻底结束当前会话，避免 iOS 历史/缓存干扰
+                  window.location.replace('/');
+                  return;
+                }
+                navigate(backTo, { replace: true });
+              }}
               className="flex-shrink-0 rounded-full border border-slate-700/70 px-2.5 py-1 text-[11px] text-slate-300"
             >
               ← 返回
