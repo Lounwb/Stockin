@@ -48,7 +48,13 @@ export function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
     };
 
     const stop = () => {
-      codeReader.reset();
+      try {
+        if (typeof codeReader.reset === 'function') {
+          codeReader.reset();
+        }
+      } catch (_) {
+        // 部分 @zxing 版本无 reset 或实现不同，忽略
+      }
       if (videoRef.current?.srcObject instanceof MediaStream) {
         videoRef.current.srcObject.getTracks().forEach((t) => t.stop());
       }

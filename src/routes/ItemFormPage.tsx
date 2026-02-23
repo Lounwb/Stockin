@@ -109,6 +109,12 @@ export function ItemFormPage({ mode }: ItemFormPageProps) {
   );
   const [searchError, setSearchError] = useState<string | null>(null);
 
+  const fromScan = location.state?.fromScan ?? false;
+  const showScanHint =
+    fromScan &&
+    !location.state?.initialName &&
+    !location.state?.initialSpec;
+
   useEffect(() => {
     if (mode === 'edit' && id) {
       const load = async () => {
@@ -189,6 +195,11 @@ export function ItemFormPage({ mode }: ItemFormPageProps) {
         <p className="text-sm text-slate-400">加载中...</p>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4 pb-8">
+          {showScanHint && (
+            <p className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-[11px] text-amber-200">
+              此条形码暂未在商品库中收录，请手动填写名称、规格等信息。
+            </p>
+          )}
           <div className="space-y-1">
             <label className="block text-xs font-medium text-slate-300">
               名称
