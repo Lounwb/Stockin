@@ -49,7 +49,12 @@ cp .env.example .env
 - `VITE_SUPABASE_URL`：Supabase 项目地址（如 `https://xxx.supabase.co`）
 - `VITE_SUPABASE_ANON_KEY`：Supabase 匿名公钥
 
-### 3. 配置 Supabase 数据库 & Storage
+### 3. 配置 Supabase 认证（Auth）
+
+- 在 **Authentication → Providers → Email** 中启用 Email，并视需要设置：
+  - **Confirm email**：若关闭，用户注册后可直接用账号密码登录；若开启，需先到邮箱点击确认链接后才能用密码登录（否则会提示 Invalid login credentials）。
+
+### 4. 配置 Supabase 数据库 & Storage
 
 1. 在 Supabase Dashboard 的 SQL 编辑器中执行 `supabase/schema.sql`  
    - 创建表：`profiles / items / item_price_history / item_transactions`
@@ -58,7 +63,7 @@ cp .env.example .env
 2. 在 Storage 中创建存储桶 **`item-images`**
    - 可根据需要设置为 public（或使用签名 URL）
 
-### 4. 配置 Edge Functions 环境变量
+### 5. 配置 Edge Functions 环境变量
 
 在 Supabase 项目中为 Edge Functions 设置：
 
@@ -71,7 +76,7 @@ cp .env.example .env
 > - `POST /search`：根据 `platform + name/barcode` 返回候选商品列表
 > - `POST /current_prices`：根据 `platform + sku` 批量返回当前价格
 
-### 5. 启用 Edge Functions 与定时任务
+### 6. 启用 Edge Functions 与定时任务
 
 1. 在 Supabase CLI 或 Dashboard 中部署函数：
    - `search_product`
@@ -80,7 +85,7 @@ cp .env.example .env
 2. 在 Supabase Dashboard 的 **Edge Functions → Scheduled** 中：
    - 为 `fetch_prices` 创建 **Daily Cron**（例如 `0 2 * * *` 每天 2:00 执行），实现“每天自动获取价格”
 
-### 6. 启动本地开发服务器
+### 7. 启动本地开发服务器
 
 ```bash
 pnpm dev
