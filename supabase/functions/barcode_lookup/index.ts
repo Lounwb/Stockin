@@ -4,17 +4,20 @@ type RequestBody = {
   barcode?: string;
 };
 
+type MxnzpItem = {
+  goodsName?: string;
+  barcode?: string;
+  price?: string;
+  brand?: string;
+  supplier?: string;
+  standard?: string;
+};
+
 type MxnzpResponse = {
   code: number;
   msg: string;
-  data?: Array<{
-    goodsName?: string;
-    barcode?: string;
-    price?: string;
-    brand?: string;
-    supplier?: string;
-    standard?: string;
-  }>;
+  /** mxnzp 可能返回 data 为单个对象或数组，需兼容 */
+  data?: MxnzpItem | MxnzpItem[];
 };
 
 type Product = {
@@ -34,9 +37,20 @@ type ResponseBody = {
 const APP_ID = Deno.env.get('MXNZP_APP_ID');
 const APP_SECRET = Deno.env.get('MXNZP_APP_SECRET');
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+};
+
 serve(async (req) => {
+  // CORS 预检：浏览器会先发 OPTIONS，必须返回 2xx 且带 CORS 头，否则会报 405
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: corsHeaders });
+  }
+
   if (req.method !== 'POST' && req.method !== 'GET') {
-    return new Response('Method not allowed', { status: 405 });
+    return new Response('Method not allowed', { status: 405, headers: corsHeaders });
   }
 
   let barcode: string | undefined;
@@ -95,7 +109,14 @@ serve(async (req) => {
     });
   }
 
-  const first = mxResp.data && mxResp.data.length > 0 ? mxResp.data[0] : undefined;
+  const rawData = mxResp.data;
+  const first: MxnzpItem | undefined = Array.isArray(rawData)
+    ? rawData.length > 0
+      ? rawData[0]
+      : undefined
+    : rawData
+      ? (rawData as MxnzpItem)
+      : undefined;
 
   const product: Product | null = first
     ? {
