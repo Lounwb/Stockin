@@ -69,27 +69,26 @@ cp .env.example .env
 
 - `SUPABASE_URL`：当前 Supabase 项目 URL
 - `SUPABASE_SERVICE_ROLE_KEY`：Service Role Key（仅用于 Edge Functions，不暴露到前端）
-- `PRICE_SERVICE_URL`：外部价格服务地址（你自建或第三方）
-- `PRICE_SERVICE_API_KEY`（可选）：价格服务鉴权用
 
-> `PRICE_SERVICE_URL` 应提供两个接口：
-> - `POST /search`：根据 `platform + name/barcode` 返回候选商品列表
-> - `POST /current_prices`：根据 `platform + sku` 批量返回当前价格
+**价格抓取（本分支不依赖外部 API）：**
+
+- `fetch_prices` 已内置京东价格抓取（`p.3.cn`），无需配置 `PRICE_SERVICE_URL`。每日 Cron 会为已绑定京东 SKU 的物品写入当日价格；天猫/拼多多可在 `supabase/functions/fetch_prices/index.ts` 内扩展自建抓取逻辑。
+- 商品搜索（`search_product`）若需京东/天猫/拼多多关键词搜索，可自建服务并配置 `PRICE_SERVICE_URL`（见 README 自建价格与搜索说明）；不配置时搜索返回空。
 
 ### 6. 启用 Edge Functions 与定时任务
 
 1. 在 Supabase CLI 或 Dashboard 中部署函数：
    - `barcode_lookup`（扫码查商品，需关闭 JWT 校验以便未登录也可调用，见下方）
    - `search_product`
-   - `fetch_prices`
-   - `get_price_stats`
+   - `fetch_prices`（内置京东抓价，每日自动执行）
+   - `get_price_stats`（物品详情页价格曲线与最高/最低/近一年均价）
    - **条形码 401**：若前端调用 `barcode_lookup` 报 401，请用 CLI 部署以应用 `supabase/config.toml` 中的 `verify_jwt = false`：
      ```bash
      supabase functions deploy barcode_lookup
      ```
      或单独关闭校验：`supabase functions deploy barcode_lookup --no-verify-jwt`
 2. 在 Supabase Dashboard 的 **Edge Functions → Scheduled** 中：
-   - 为 `fetch_prices` 创建 **Daily Cron**（例如 `0 2 * * *` 每天 2:00 执行），实现“每天自动获取价格”
+   - 为 `fetch_prices` 创建 **Daily Cron**（例如 `0 2 * * *` 每天 2:00 执行），实现每天自动获取商品价格并写入 `item_price_history`
 
 ### 7. 启动本地开发服务器
 
