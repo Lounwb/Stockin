@@ -1,0 +1,3 @@
+# 条形码查询允许未登录调用（仅查商品信息，不涉及用户数据）
+[functions.barcode_lookup]
+verify_jwt = false

@@ -9,9 +9,12 @@ type BarcodeScannerProps = {
 export function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const isProcessingRef = useRef(false); // 防止重复触发
+  const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null);
 
   useEffect(() => {
     const codeReader = new BrowserMultiFormatReader();
+    codeReaderRef.current = codeReader;
 
     const start = async () => {
       if (!navigator.mediaDevices?.getUserMedia) {
@@ -31,10 +34,17 @@ export function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
           undefined,
           videoRef.current!,
           (result, err) => {
+            // 防止重复触发：如果已经在处理或已停止，忽略后续回调
+            if (isProcessingRef.current || !codeReaderRef.current) {
+              return;
+            }
             if (result) {
               const text = result.getText();
-              onDetected(text);
-              stop();
+              if (text && text.trim()) {
+                isProcessingRef.current = true; // 标记正在处理
+                onDetected(text);
+                stop();
+              }
             } else if (err) {
               // 忽略单次失败，继续扫描
               // eslint-disable-next-line no-console
@@ -48,9 +58,10 @@ export function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
     };
 
     const stop = () => {
+      isProcessingRef.current = true; // 标记已停止，防止回调再次触发
       try {
-        if (typeof codeReader.reset === 'function') {
-          codeReader.reset();
+        if (codeReaderRef.current && typeof codeReaderRef.current.reset === 'function') {
+          codeReaderRef.current.reset();
         }
       } catch (_) {
         // 部分 @zxing 版本无 reset 或实现不同，忽略
@@ -58,6 +69,7 @@ export function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
       if (videoRef.current?.srcObject instanceof MediaStream) {
         videoRef.current.srcObject.getTracks().forEach((t) => t.stop());
       }
+      codeReaderRef.current = null;
       onClose();
     };
 

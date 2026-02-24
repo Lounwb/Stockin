@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from '../components/AppShell';
 import { listItems, type Item, changeQuantity, deleteItem } from '../api/items';
@@ -11,6 +11,7 @@ export function ItemsListPage() {
   const [error, setError] = useState<string | null>(null);
   const [showScanner, setShowScanner] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
+  const isProcessingScanRef = useRef(false); // 防止重复处理扫码
 
   const navigate = useNavigate();
 
@@ -54,6 +55,11 @@ export function ItemsListPage() {
   };
 
   const handleScanDetected = async (code: string) => {
+    // 防止重复调用：如果已经在处理，直接返回
+    if (isProcessingScanRef.current) {
+      return;
+    }
+    isProcessingScanRef.current = true;
     setShowScanner(false);
     setScanError(null);
     try {
@@ -76,6 +82,11 @@ export function ItemsListPage() {
           barcode: code
         }
       });
+    } finally {
+      // 延迟重置，避免快速连续扫码时重复触发
+      setTimeout(() => {
+        isProcessingScanRef.current = false;
+      }, 1000);
     }
   };
 

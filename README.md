@@ -79,9 +79,15 @@ cp .env.example .env
 ### 6. 启用 Edge Functions 与定时任务
 
 1. 在 Supabase CLI 或 Dashboard 中部署函数：
+   - `barcode_lookup`（扫码查商品，需关闭 JWT 校验以便未登录也可调用，见下方）
    - `search_product`
    - `fetch_prices`
    - `get_price_stats`
+   - **条形码 401**：若前端调用 `barcode_lookup` 报 401，请用 CLI 部署以应用 `supabase/config.toml` 中的 `verify_jwt = false`：
+     ```bash
+     supabase functions deploy barcode_lookup
+     ```
+     或单独关闭校验：`supabase functions deploy barcode_lookup --no-verify-jwt`
 2. 在 Supabase Dashboard 的 **Edge Functions → Scheduled** 中：
    - 为 `fetch_prices` 创建 **Daily Cron**（例如 `0 2 * * *` 每天 2:00 执行），实现“每天自动获取价格”
 
