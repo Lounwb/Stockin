@@ -11,7 +11,8 @@ export function ItemsListPage() {
   const [error, setError] = useState<string | null>(null);
   const [showScanner, setShowScanner] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
-  const isProcessingScanRef = useRef(false); // 防止重复处理扫码
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const isProcessingScanRef = useRef(false);
 
   const navigate = useNavigate();
 
@@ -55,15 +56,14 @@ export function ItemsListPage() {
   };
 
   const handleScanDetected = async (code: string) => {
-    // 防止重复调用：如果已经在处理，直接返回
-    if (isProcessingScanRef.current) {
-      return;
-    }
+    if (isProcessingScanRef.current) return;
     isProcessingScanRef.current = true;
     setShowScanner(false);
     setScanError(null);
+    setLookupLoading(true);
     try {
       const product = await lookupBarcode(code);
+      setLookupLoading(false);
       navigate('/items/new', {
         replace: true,
         state: {
@@ -75,6 +75,7 @@ export function ItemsListPage() {
       });
     } catch (e) {
       setScanError((e as Error).message);
+      setLookupLoading(false);
       navigate('/items/new', {
         replace: true,
         state: {
@@ -83,7 +84,6 @@ export function ItemsListPage() {
         }
       });
     } finally {
-      // 延迟重置，避免快速连续扫码时重复触发
       setTimeout(() => {
         isProcessingScanRef.current = false;
       }, 1000);
@@ -91,9 +91,16 @@ export function ItemsListPage() {
   };
 
   return (
-    <AppShell
-      title="库存概览"
-      rightSlot={
+    <>
+      {lookupLoading && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-slate-950/95">
+          <div className="h-10 w-10 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
+          <p className="text-sm text-slate-200">正在查询条形码，请稍候...</p>
+        </div>
+      )}
+      <AppShell
+        title="库存概览"
+        rightSlot={
         <button
           type="button"
           onClick={() => navigate('/items/new')}
@@ -210,6 +217,7 @@ export function ItemsListPage() {
         />
       )}
     </AppShell>
+    </>
   );
 }
 

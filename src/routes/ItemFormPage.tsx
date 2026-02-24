@@ -93,9 +93,29 @@ export function ItemFormPage({ mode }: ItemFormPageProps) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const UNIT_OPTIONS = [
+    '',
+    '瓶',
+    '提',
+    '箱',
+    '罐',
+    '袋',
+    '盒',
+    '个',
+    '支',
+    '包',
+    '件',
+    '套',
+    '桶',
+    'kg',
+    'g',
+    'L',
+    'ml'
+  ];
   const [name, setName] = useState(location.state?.initialName ?? '');
   const [spec, setSpec] = useState(location.state?.initialSpec ?? '');
   const [unit, setUnit] = useState('');
+  const [unitOther, setUnitOther] = useState('');
   const [quantity, setQuantity] = useState('');
   const [barcode, setBarcode] = useState(location.state?.barcode ?? '');
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -125,7 +145,9 @@ export function ItemFormPage({ mode }: ItemFormPageProps) {
           setInitialItem(item);
           setName(item.name);
           setSpec(item.spec ?? '');
-          setUnit(item.unit ?? '');
+          const u = item.unit ?? '';
+          setUnit(u);
+          if (u && !UNIT_OPTIONS.includes(u)) setUnitOther(u);
           setQuantity(String(item.quantity));
           setBarcode(item.barcode ?? '');
           setImageUrl(item.image_url);
@@ -244,15 +266,41 @@ export function ItemFormPage({ mode }: ItemFormPageProps) {
                 className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-sm outline-none ring-2 ring-transparent focus:ring-emerald-500"
               />
             </label>
-            <label className="w-24 text-xs font-medium text-slate-300">
+            <label className="w-28 text-xs font-medium text-slate-300">
               单位
-              <input
-                type="text"
-                value={unit}
-                onChange={(e) => setUnit(e.target.value)}
-                placeholder="瓶/箱"
+              <select
+                value={UNIT_OPTIONS.includes(unit) ? unit : '__other__'}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (v !== '__other__') {
+                    setUnit(v);
+                  } else {
+                    setUnit(unitOther);
+                  }
+                }}
                 className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-sm outline-none ring-2 ring-transparent focus:ring-emerald-500"
-              />
+              >
+                <option value="">请选择</option>
+                {UNIT_OPTIONS.filter(Boolean).map((u) => (
+                  <option key={u} value={u}>
+                    {u}
+                  </option>
+                ))}
+                <option value="__other__">其他</option>
+              </select>
+              {(UNIT_OPTIONS.includes(unit) ? unit : '__other__') === '__other__' && (
+                <input
+                  type="text"
+                  value={unitOther}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setUnitOther(v);
+                    setUnit(v);
+                  }}
+                  placeholder="输入单位"
+                  className="mt-1.5 w-full rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-sm outline-none ring-2 ring-transparent focus:ring-emerald-500"
+                />
+              )}
             </label>
           </div>
 
