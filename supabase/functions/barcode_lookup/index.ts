@@ -40,7 +40,8 @@ const APP_SECRET = Deno.env.get('MXNZP_APP_SECRET');
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+  'Access-Control-Allow-Headers':
+    'Content-Type, Authorization, apikey, x-client-info'
 };
 
 serve(async (req) => {
@@ -66,7 +67,7 @@ serve(async (req) => {
   if (!barcode) {
     return new Response(JSON.stringify({ error: 'barcode is required' }), {
       status: 400,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   }
 
@@ -75,7 +76,7 @@ serve(async (req) => {
       JSON.stringify({ error: 'MXNZP_APP_ID or MXNZP_APP_SECRET not configured' }),
       {
         status: 500,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
   }
@@ -96,7 +97,7 @@ serve(async (req) => {
         JSON.stringify({ error: 'Upstream error', status: res.status }),
         {
           status: 502,
-          headers: { 'Content-Type': 'application/json' }
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
@@ -105,7 +106,7 @@ serve(async (req) => {
     console.error('mxnzp fetch failed', e);
     return new Response(JSON.stringify({ error: 'Fetch failed' }), {
       status: 502,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   }
 
@@ -136,10 +137,7 @@ serve(async (req) => {
 
   return new Response(JSON.stringify(response), {
     status: 200,
-    headers: {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*'
-    }
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
   });
 });
 
